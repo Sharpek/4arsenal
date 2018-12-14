@@ -109,7 +109,7 @@ async def predict(model, yV, hV, s, x, ts):
     Should return a tuple of booleans (PRESS_UP, PRESS_LEFT, PRESS_RIGHT)
     """
 
-    nonlocal last_distances
+    global last_distances
 
     data = [
         yV,
