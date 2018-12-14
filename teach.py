@@ -87,6 +87,7 @@ async def train_and_save(collection):
 last_distances = [0]
 max_distance = 0
 turns_since_max = 0
+revert_turns = 0
 
 
 async def load_model():
@@ -103,6 +104,7 @@ async def load_model():
     last_distances = [0]
     max_distance = 0
     turns_since_max = 0
+    revert_turns = 0
 
     return model
 
@@ -117,7 +119,7 @@ async def predict(model, yV, hV, s, x, ts):
     Should return a tuple of booleans (PRESS_UP, PRESS_LEFT, PRESS_RIGHT)
     """
 
-    global last_distances, max_distance, turns_since_max
+    global last_distances, max_distance, turns_since_max, revert_turns
 
     data = [
         yV,
@@ -134,6 +136,10 @@ async def predict(model, yV, hV, s, x, ts):
     last_distances.append(x)
     last_distances = last_distances[:60 * 5]
 
+    while revert_turns > 0:
+        revert_turns -= 1
+        return 1 - result[0][0], 1 - result[0][1], 1 - result[0][2]
+
     if x > max_distance:
         max_distance = x
     else:
@@ -141,6 +147,7 @@ async def predict(model, yV, hV, s, x, ts):
             turns_since_max += 1
         else:
             turns_since_max = 0
+            revert_turns = 10
             return 1 - result[0][0], 1 - result[0][1], 1 - result[0][2]
 
     return result[0][0], result[0][1], result[0][2]
