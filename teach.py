@@ -42,6 +42,7 @@ async def train_and_save(collection):
 
     # Extract features and labels from tha data in the database.
     cursor = collection.find({})
+    last_distances = [0]
     input_series = []
     output_series = []
     async for document in cursor:
@@ -53,12 +54,16 @@ async def train_and_save(collection):
                 d if d is not None else 30
                 for d in data['s']
             ],
+            data['x'] - min(last_distances)
         ])
         output_series.append([
             data['u'],
             data['l'],
             data['r'],
         ])
+        last_distances.append(data['x'])
+        last_distances = last_distances[:60 * 5]
+
 
     NUMBER_OF_LAYERS = 1
     NEURONS_PER_LAYER = 20
@@ -90,6 +95,9 @@ async def load_model():
     return model
 
 
+last_distances = [0]
+
+
 async def predict(model, yV, hV, s, x, ts):
     """
     Make predictions during a game.
@@ -99,6 +107,7 @@ async def predict(model, yV, hV, s, x, ts):
 
     Should return a tuple of booleans (PRESS_UP, PRESS_LEFT, PRESS_RIGHT)
     """
+
     data = [
         yV,
         hV,
@@ -106,8 +115,12 @@ async def predict(model, yV, hV, s, x, ts):
             d if d is not None else 30
             for d in s
         ],
+        x - min(last_distances)
     ]
     result = model.predict(X=[data])
+
+    last_distances.append(x)
+    last_distances = last_distances[:60 * 5]
 
     return result[0][0], result[0][1], result[0][2]
 
