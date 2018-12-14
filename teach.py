@@ -119,15 +119,17 @@ async def predict(model, yV, hV, s, x, ts):
             for d in s
         ],
         x,
-        last_distances[0],
+        last_distances[max(0, len(last_distances) - 60 * 5)],
     ]
     result = model.predict(X=[data])
 
     last_distances.append(x)
-    last_distances = last_distances[:60 * 5]
+    last_distances = last_distances[:60 * 10]
+
+    if len(last_distances) > 60 * 5 and x <= max(last_distances):
+        return 1 - result[0][0], 1 - result[0][1], 1 - result[0][2]
 
     return result[0][0], result[0][1], result[0][2]
-
 
 
 def main():
