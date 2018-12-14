@@ -11,12 +11,12 @@ MODEL_FILE_NAME = 'filename.pickle'
 
 
 def train(list_x, list_y):
-    NUMBER_OF_LAYERS = 1
-    NEURONS_PER_LAYER = 20
+    NUMBER_OF_LAYERS = 3
+    NEURONS_PER_LAYER = 80
 
     classifier = MLPClassifier(
-        hidden_layer_sizes=(NEURONS_PER_LAYER,) * NUMBER_OF_LAYERS,
-        alpha=0.01,
+        hidden_layer_sizes=((1, 256), (2, 64), (3, 16)),
+        alpha=0.001,
         random_state=1
     )
 
@@ -64,7 +64,6 @@ async def train_and_save(collection):
         ])
         last_distances.append(data['x'])
         last_distances = last_distances[:60 * 5]
-
 
     NUMBER_OF_LAYERS = 1
     NEURONS_PER_LAYER = 20
@@ -143,7 +142,7 @@ async def predict(model, yV, hV, s, x, ts):
     if x > max_distance:
         max_distance = x
     else:
-        if turns_since_max < 60 * 5:
+        if turns_since_max < 60 * 3:
             turns_since_max += 1
         else:
             turns_since_max = 0
