@@ -54,7 +54,8 @@ async def train_and_save(collection):
                 d if d is not None else 30
                 for d in data['s']
             ],
-            data['x'] - min(last_distances)
+            data['x'],
+            last_distances[0]
         ])
         output_series.append([
             data['u'],
@@ -108,6 +109,8 @@ async def predict(model, yV, hV, s, x, ts):
     Should return a tuple of booleans (PRESS_UP, PRESS_LEFT, PRESS_RIGHT)
     """
 
+    nonlocal last_distances
+
     data = [
         yV,
         hV,
@@ -115,7 +118,8 @@ async def predict(model, yV, hV, s, x, ts):
             d if d is not None else 30
             for d in s
         ],
-        x - min(last_distances)
+        x,
+        last_distances[0],
     ]
     result = model.predict(X=[data])
 
