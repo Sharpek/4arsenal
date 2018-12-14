@@ -99,7 +99,7 @@ async def load_model():
     # time to load/compile the model now.
     model = sync_load_model(MODEL_FILE_NAME)
 
-    global last_distances, max_distance, turns_since_max
+    global last_distances, max_distance, turns_since_max, revert_turns
 
     last_distances = [0]
     max_distance = 0
@@ -147,7 +147,7 @@ async def predict(model, yV, hV, s, x, ts):
             turns_since_max += 1
         else:
             turns_since_max = 0
-            revert_turns = 10
+            revert_turns = 3
             return 1 - result[0][0], 1 - result[0][1], 1 - result[0][2]
 
     return result[0][0], result[0][1], result[0][2]
