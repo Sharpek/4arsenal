@@ -5,6 +5,9 @@ from sklearn.pipeline import Pipeline
 
 from db import setup_mongo
 from settings import config
+from utils import save_model, load_model as sync_load_model
+
+MODEL_FILE_NAME = 'filename.pickle'
 
 
 def train(list_x, list_y):
@@ -39,26 +42,52 @@ async def train_and_save(collection):
 
     # Extract features and labels from tha data in the database.
     cursor = collection.find({})
+    input_series = []
+    output_series = []
     async for document in cursor:
         data = document['data']
+        input_series.append([
+            data['yV'],
+            data['hV'],
+            *[
+                d if d is not None else 30
+                for d in data['s']
+            ],
+        ])
+        output_series.append([
+            data['u'],
+            data['l'],
+            data['r'],
+        ])
 
-    # Train the model.
+    NUMBER_OF_LAYERS = 1
+    NEURONS_PER_LAYER = 20
 
-    # todo Store the model so that it can be loaded later using load_model.
-    model = train()
+    classifier = MLPClassifier(
+        hidden_layer_sizes=(NEURONS_PER_LAYER,) * NUMBER_OF_LAYERS,
+        alpha=0.01,
+        random_state=1
+    )
+
+    pipeline = Pipeline([
+        ('classifier', classifier)
+    ])
+
+    model = pipeline.fit(X=input_series, y=output_series)
+
+    save_model(model, MODEL_FILE_NAME)
 
 
 async def load_model():
     """
     Load a trained model that you prepared in `train_and_save` earlier.
     """
-    import time
 
     # The game will not start unless this callback finishes, take your
     # time to load/compile the model now.
-    time.sleep(2)
+    model = sync_load_model(MODEL_FILE_NAME)
 
-    return None
+    return model
 
 
 async def predict(model, yV, hV, s, x, ts):
@@ -70,15 +99,18 @@ async def predict(model, yV, hV, s, x, ts):
 
     Should return a tuple of booleans (PRESS_UP, PRESS_LEFT, PRESS_RIGHT)
     """
-    import time
+    data = [
+        yV,
+        hV,
+        *[
+            d if d is not None else 30
+            for d in s
+        ],
+    ]
+    result = model.predict(X=[data])
 
-    now = int(time.time())
+    return result[0][0], result[0][1], result[0][2]
 
-    press_up = (now % 5) < 3
-    press_left = (now % 10) < 4
-    press_right = (now % 10) > 5
-
-    return press_up, press_left, press_right
 
 
 def main():
