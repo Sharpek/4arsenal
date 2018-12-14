@@ -84,6 +84,11 @@ async def train_and_save(collection):
     save_model(model, MODEL_FILE_NAME)
 
 
+last_distances = [0]
+max_distance = 0
+turns_since_max = 0
+
+
 async def load_model():
     """
     Load a trained model that you prepared in `train_and_save` earlier.
@@ -93,12 +98,13 @@ async def load_model():
     # time to load/compile the model now.
     model = sync_load_model(MODEL_FILE_NAME)
 
+    global last_distances, max_distance, turns_since_max
+
+    last_distances = [0]
+    max_distance = 0
+    turns_since_max = 0
+
     return model
-
-
-last_distances = [0]
-max_distance = 0
-turns_since_max = 0
 
 
 async def predict(model, yV, hV, s, x, ts):
