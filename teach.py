@@ -1,82 +1,28 @@
 import asyncio
-import sklearn
-from sklearn_pandas import DataFrameMapper
+
+from sklearn.neural_network import MLPClassifier
+from sklearn.pipeline import Pipeline
 
 from db import setup_mongo
 from settings import config
 
 
-def s_generalize(x):
-    if x is None:
-        return 30
-    return x
+def train(list_x, list_y):
+    NUMBER_OF_LAYERS = 1
+    NEURONS_PER_LAYER = 20
 
+    classifier = MLPClassifier(
+        hidden_layer_sizes=(NEURONS_PER_LAYER,) * NUMBER_OF_LAYERS,
+        alpha=0.01,
+        random_state=1
+    )
 
-def s_keyboard_generalize(x):
-    return 1 if x else 0
-
-
-def get_mapper():
-    return DataFrameMapper([
-        ('yV', sklearn.preprocessing.StandardScaler()),
-
-        ('hV', sklearn.preprocessing.StandardScaler()),
-
-        ('u', [sklearn.preprocessing.FunctionTransformer(
-            s_keyboard_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
-        ('l', [sklearn.preprocessing.FunctionTransformer(
-            s_keyboard_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
-        ('r', [sklearn.preprocessing.FunctionTransformer(
-            s_keyboard_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
-        ('s_0', [sklearn.preprocessing.FunctionTransformer(
-            s_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
-        ('s_1', [sklearn.preprocessing.FunctionTransformer(
-            s_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
-        ('s_2', [sklearn.preprocessing.FunctionTransformer(
-            s_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
-        ('s_3', [sklearn.preprocessing.FunctionTransformer(
-            s_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
-        ('s_4', [sklearn.preprocessing.FunctionTransformer(
-            s_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
-        ('s_5', [sklearn.preprocessing.FunctionTransformer(
-            s_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
-        ('s_6', [sklearn.preprocessing.FunctionTransformer(
-            s_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
-        ('s_7', [sklearn.preprocessing.FunctionTransformer(
-            s_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-        ('s_8', [sklearn.preprocessing.FunctionTransformer(
-            s_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-        ('s_9', [sklearn.preprocessing.FunctionTransformer(
-            s_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
-        ('s_10', [sklearn.preprocessing.FunctionTransformer(
-            s_generalize, validate=False
-        ), sklearn.preprocessing.StandardScaler()]),
-
+    pipeline = Pipeline([
+        ('classifier', classifier)
     ])
+
+    model = pipeline.fit(X=list_x, y=list_y)
+    return model
 
 
 async def train_and_save(collection):
@@ -98,9 +44,8 @@ async def train_and_save(collection):
 
     # Train the model.
 
-    mapper = get_mapper()
-
-    # Store the model so that it can be loaded later using load_model.
+    # todo Store the model so that it can be loaded later using load_model.
+    model = train()
 
 
 async def load_model():
