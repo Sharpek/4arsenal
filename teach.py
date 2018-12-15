@@ -1,5 +1,4 @@
 import asyncio
-import random
 
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
@@ -88,7 +87,7 @@ last_distances = [0]
 max_distance = 0
 turns_since_max = 0
 revert_turns = 0
-reverts = []
+prev_datas = []
 
 
 async def load_model():
@@ -100,13 +99,13 @@ async def load_model():
     # time to load/compile the model now.
     model = sync_load_model(MODEL_FILE_NAME)
 
-    global last_distances, max_distance, turns_since_max, revert_turns, reverts
+    global last_distances, max_distance, turns_since_max, revert_turns, prev_datas
 
     last_distances = [0]
     max_distance = 0
     turns_since_max = 0
+    prev_datas = []
     revert_turns = 0
-    reverts = []
 
     return model
 
@@ -121,7 +120,7 @@ async def predict(model, yV, hV, s, x, ts):
     Should return a tuple of booleans (PRESS_UP, PRESS_LEFT, PRESS_RIGHT)
     """
 
-    global last_distances, max_distance, turns_since_max, revert_turns, reverts
+    global last_distances, max_distance, turns_since_max, revert_turns, prev_datas
 
     data = [
         yV,
@@ -133,14 +132,16 @@ async def predict(model, yV, hV, s, x, ts):
         x,
         last_distances[0],
     ]
-    result = model.predict(X=[data])
+    prev_datas.append(data)
+    prev_datas = prev_datas[-10:]
+    result = model.predict(X=prev_datas)
 
     last_distances.append(x)
     last_distances = last_distances[:60 * 5]
 
     while revert_turns > 0:
         revert_turns -= 1
-        return reverts
+        return 1 - result[0][0], 1 - result[0][1], 1 - result[0][2]
 
     if x > max_distance:
         max_distance = x
@@ -150,8 +151,7 @@ async def predict(model, yV, hV, s, x, ts):
         else:
             turns_since_max = 0
             revert_turns = 3
-            reverts = (random.randint(0, 1), 1, 0)
-            return reverts
+            return 1 - result[0][0], 1 - result[0][1], 1 - result[0][2]
 
     return result[0][0], result[0][1], result[0][2]
 
